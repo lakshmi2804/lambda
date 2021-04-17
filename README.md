@@ -48,7 +48,7 @@ After the options section we then moved to paramters section which are to be pas
 
 `Lambda_Function_Name` : User needs to give the function name 
 
-`LambdaDeployment` :
+`LambdaDeployment` : This paramter is used to made deployment on lambda whether it will be 'Create, UpdateCode, UpdateConfig, Delete, PostDeploymentTest, PublishVersion'
 
 `Environment` : The user also needs to specify the environment whether it could be `NonProd` or `Prod`
 
@@ -88,6 +88,7 @@ Then we are extracting the repo name and branch name by using `readFile` from th
 
 **Maven Build/JUNIT Testing**
 
+This stage will be executed only when
 
 
 
