@@ -88,7 +88,61 @@ Then we are extracting the repo name and branch name by using `readFile` from th
 
 **Maven Build/JUNIT Testing**
 
-This stage will be executed only when
+This stage will be executed only when user wants to do `Create` or `UpdateCode`.We have to do maven build in this particular stage based on the `pom.xml` file which has been present in the git repository.First we have to check whether the lambda deployment is "Create" or "UpdateCode" using `if` block statements.If the condition either of those values then we will do maven build based on the configuration file (i.e; pom.xml).
+
+`mvn clean package shade:shade`
+
+This command will install and build maven package and it will also generate some .jar files which we to upload to `s3 bucket` in further stages.
+
+**Approver Notification**
+
+Here we are configuring the approver mail in the post conditions.In these configuration also we are checking two conditions whether the mails needs to be sent or no need for these we are writing an if block statement (i.e; if the "${params.Approver_Email}" is Not Applicable then we don't need to sent a mail whether the "${params.Approver_Email}" is any recipient then we have to sent a mail to that recipient).
+
+
+**Approval**
+
+Approver mail or input needs to send or asked only when the job is configured to `Prod` environment,if the job is configured to `NonProd` environment then we don't need to send an email or ask for an input.Here we created an input button whether the job needs to be 'Approve' or 'Reject'.we also have to check another condition that the input is 'Reject'.If it is rejected then also we must have to abort the job by throwing an error "Approver has rejected the Deployment".If the input is 'Approve' then we must have to call the function where the lambda deployments took place.
+
+**Prod or NonProd**
+
+This stage depends on a function whenever the function call this stage will execute.In this stage we must have to provide the stage name as the environment name which is selected at parameters.First we have to export our aws credentials which are stored in jenkins credentials by using the below commands.
+
+`withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${params.AWS_CredentialsId}"]])`
+
+`export AWS_ACCESS_KEY_ID=\$AWS_ACCESS_KEY_ID`
+
+`export AWS_SECRET_ACCESS_KEY=\$AWS_SECRET_ACCESS_KEY`
+
+After exporting our aws credentials then we are checking the environment whether it is `Prod` or `NonProd`.Then we are passing some echo commands for user understanding while seeing in the console output that the present build is deploying to this particular environment.And also we are exporting repo name and branch name which are being stored in script files during gitclone process.Then we have to check whether the deployment is `Create, Delete, UpdateCode, UpdateConfig, PublishVersion`.
+
+If the deployment is `Create` then we have to create a lambda function based on the configuration files.Before creating the lambda function we have to upload `.jar` files which are created during maven build to the s3 bucket.This uploading part will be done in a script file (i.e; copyingfile.sh).Here we will check the path of the .jar files where it has been created then we will upload to s3.
+
+`aws s3 cp $i s3://$S3_Bucket_name --region $Aws_Region`
+
+This command will push the .jar files to our s3 bucket based on the region where our bucket has been located.After pushing to s3 bucket then we have to create the lambda fucntion based on the configuration file.First we have to load the configuration files using `load` command.Then we have to run cli commands to create.
+
+`aws lambda create-function --function-name $Function_Name  --code S3Bucket=$S3_Bucket_name,S3Key=$S3_Key_Name --handler $Handler_Name --runtime $Run_Time --role $Role --memory-size $Memory_Size --timeout $timeout --region "${env.Aws_Region}"`
+
+Those variable values will be exported from those configuration files.So that's why we loaded the file before creating the function.The above cli command will create lambda function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
