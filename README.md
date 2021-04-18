@@ -40,7 +40,7 @@ Though it's clearly mentioned our pipeline needs to be run in docker we making a
 
 Here we are using only one options it is,
 
-timestamps` : This will be helpfull to display timestamps for every line of console ouput`
+`timestamps` : This will be helpfull to display timestamps for every line of console ouput
 
 **Parameters Section**
 
