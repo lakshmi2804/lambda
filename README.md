@@ -125,9 +125,36 @@ This command will push the .jar files to our s3 bucket based on the region where
 
 Those variable values will be exported from those configuration files.So that's why we loaded the file before creating the function.The above cli command will create lambda function.
 
+If the lambda deployment is to do  `UpdateCode`,In this case also we have to follow the same what we have done for create.First we have to upload .jar files to s3 this uploading script is same for both create and updatecode.We are using the same script file for both the conditions the procedure is mentioned above in the "Create" condtion you can check from there.After uploading to s3 then we have to run aws cli command to update our existing lambdba function.
+
+`aws lambda update-function-code --function-name ${env.Function_Name} --s3-bucket ${env.S3_Bucket_Name} --s3-key ${env.S3_Key_Name} --region "${env.Aws_Region}"`
+
+This command line will help to update the existing lambda fucntion.In this step also we have to load these variables from the configuration file.Before running the cli command we have to run `load` command to load those variable values from the configuration files.
+
+If the user need to delete the lambda function then he didn't need to push any files to s3 directly we can delete the lambda function.
+
+`aws lambda delete-function --function-name ${env.Function_Name} --region "${env.Aws_Region}`
+
+This command will help you to delete the lambda function by passing `Function_Name` and `Aws_Region` as arguments.
+
+If the user wants to do `UpdateConfig` here also we dont need to upload any jar files to s3 direclty we can update configuration of the existing lambda function.This will be helpful when we have any changes in configuration file then we can update those changes to lambda function by using UpdateConfig.It can also be done with a simple cli command which is given below.
+
+`aws lambda update-function-configuration --function-name ${env.Function_Name} --memory-size ${env.Memory_Size} --timeout $timeout --runtime $Run_Time --region "${env.Aws_Region}"`
 
 
+Finally if we need to `PublishVersion` of updated lambda function then we can run the command 
 
+`aws lambda publish-version --function-name ${env.Function_Name} --description "by Jenkins job #${env.BUILD_NUMBER} on $present" --region ${env.Aws_Region}`
+
+Here we having another requirement that the Publishedversion of lambda description should be like present jenkins build number with date when the job build take place,For that we are using `Date()` function and we are also formatting to get only in that format like "dd/MM/yyyy" and assinging it to a variable and passing the varibale as an argument in the above command.
+
+**SonarQube Testing**
+
+After the function called the next stage is SonarQube Testing.As of now we are not doing any that type of testing we are just passing an simple echo command that this stage is active.
+
+**Integration Testing**
+
+As a part of integration testing we are doing lambda-invoke.This lambda invoke process is also written in a script file,First we are exporting aws credentials here again beacuse it is a new stage and it doesnt depend on the function so we are calling them again.After exporting we also doing the same what we did previously i.e; loading the configuration file from the git repository you can check it from the previous stages how to export aws credentials and load configuration files.Then we will run the script file by passing some command line arguments like "Function_Name, Git_Branch, test6(i.e;Git_Repo_Url name which we stored in a file during gitclone), Environment, Aws_Region".First we are copying the post-deploy folder which is present in git to our job workspace and then we are creating a response folder with the functionname to store the responses of lambda-invoke(i.e; $WORKSPACE/post-deploy-responses/$function_name).Then we are giving 777 permissions to overflow some permission issues and we are checking whether the lambda function is in `Prod` or `NonProd` then based on the environment we are greping the response files to do lambda-invoke from post-deploy folder.Then we are passing hrough a for loop where
 
 
 
